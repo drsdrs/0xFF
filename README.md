@@ -1,2 +1,3 @@
 # 0xFF
-Browser based coding eviroment, use coffeescript to manipulate a pixel-matrix, also using gamepad and images for manipulation of pixel-matrix.
+Browser based coding eviroment.
+Use coffeescript, a gamepad, and some images to manipulate a pixel-matrix.
