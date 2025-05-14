@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0xFF</title>
+    <link rel="stylesheet" href="./style/style.css">
+    <link rel="stylesheet" href="./style/customSelect.css">
+    <link rel="stylesheet" href="./style/codemirror.css">
+</head>
+
+<body style="opacity: 0;">
+
+  <div class="flex">
+    <div id="canvasRow">
+
+      <div id="canvasContainer" class="colorBox">
+        <h4>CANVAS</h4>
+        <canvas id="webglCanvas" width="256" height="256"></canvas>
+      </div>
+
+      <div id="imageDataContainer" class="colorBox">
+        <h4>IMAGES</h4>
+        <label type="button" name="button" class="fakeButton">
+          AddImage
+          <input type="file" id="addImageButton" accept="image/*" style="display:none;">
+        </label>
+        <div id="imageDataView">
+        </div>
+      </div>
+
+      <div id="gamePadInfoContainer" class="colorBox">
+        <h4>GAMEPAD</h4>
+        <span id="gamePadInfo" >none</span>
+      </div>
+
+    </div>
+
+    <div id="editorContainer">
+
+      <div id="codeEditorTitle" class="colorBox">
+        <h4>TITLE</h4>
+        <input type="text" id="codeEditorTitleInput" name="codeEditorTitle" placeholder="Name or short desription." maxLength="48" >
+      </div>
+
+      <div id="codeEditorSetup" class="colorBox">
+        <h4>SETUP</h4>
+        <textarea></textarea>
+      </div>
+
+      <div id="codeEditorLoop" class="colorBox">
+        <h4>LOOP</h4>
+        <textarea></textarea>
+      </div>
+
+      <div id="errorOutputContainer" class="colorBox">
+        <h4>ERROR</h4>
+        <pre><code id="errorOutput">No errors :)</code></pre>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div id="compiledCodeContainer" class="colorBox">
+    <h4>COMPILED OUTPUT</h4>
+    <div id="codeCompiled"><textarea id="codeCompiledTextarea"></textarea></div>
+  </div>
+
+  <div id="menu">
+    <div id="btnContainer" class="invisible">
+      <button type="button" id="saveBtn" title="STRG+S">Save&Run</button>
+      <button type="button" id="deleteBtn">Delete</button>
+      <button type="button" id="newBtn">New</button>
+      <button type="button" id="exportBtn" name="button">Export</button>
+    </div>
+    <button type="button" id="collapseBtn" >⌗ MENU</button>
+
+  </div>
+  <div id="ticker"></div>
+
+  <script type="text/javascript" src="./script/globals.js"></script>
+  <script type="text/javascript" src="./script/lib/coffeescript.js"></script>
+  <script type="text/javascript" src="./script/lib/codemirror.min.js"></script>
+  <script type="text/javascript" src="./script/lib/codemirror_matchbrackets.js"></script>
+  <script type="text/javascript" src="./script/lib/codemirror_autoIndentRulers.js"></script>
+  <script type="text/javascript" src="./script/lib/codemirror_closebrackets.js"></script>
+  <script type="text/javascript" src="./script/lib/codemirror_mode_coffeescript.js"></script>
+  <script type="text/javascript" src="./script/lib/codemirror_mode_javascript.js"></script>
+  <script type='module' src="./script/main.js"></script>
+
+</body>
+</html>

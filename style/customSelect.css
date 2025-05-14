@@ -1,0 +1,41 @@
+.custom-select-box {
+  position: relative;
+  display: inline-block;
+
+  cursor: pointer;
+}
+
+.arrow {
+  display: inline-block;
+  float: right;
+  /* transition: transform 0.15s; */
+}
+
+.options-container {
+  position: absolute;
+  left: 100%;
+  bottom: 0px;
+  width: 100%;
+  display: none;
+  z-index: 1;
+}
+.options-container img{
+  width: 100%;
+}
+
+.option {
+  background: #125;
+  cursor: pointer;
+}
+
+.custom-select-box.open {
+  /* background: #732; */
+}
+
+.custom-select-box.open .arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-box.open .options-container {
+  display: block;
+}
