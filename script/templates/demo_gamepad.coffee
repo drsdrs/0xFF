@@ -1,5 +1,5 @@
 ###_TITLE_###
-Example 190 Gamepad F$r:,'dddd'
+Example Gamepad
 
 ###_SETUP_###
 img[0][i]

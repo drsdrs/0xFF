@@ -4,8 +4,6 @@
   for export --> inline imageData into coffee/js template
 */
 
-let sendImgDataCb = function(){};
-
 /*----  Upload image  ----*/
 const uploadImgBtn = $id('addImageButton');
 uploadImgBtn.addEventListener('change', loadImage);
@@ -24,7 +22,7 @@ function loadImage() {
   reader.readAsDataURL(file);
 };
 
-/*----  Extract image data  ----*/
+/*----  Ectract image data  ----*/
 let imgData = [];
 const imageCanvas = document.createElement('canvas');
 imageCanvas.style.imageRendering = 'pixelated';
@@ -66,70 +64,63 @@ function getPixelDataFromImage(img) {
   return pixels;
 }
 
-// Init
-const imgPath = './img/';
+
+// init
+
+const imgPath = './img/'
 
 const imageUrls = [
-  imgPath + 'colors.jpg',
-  imgPath + 'eraserhead.jpg',
-  imgPath + 'drop.jpg',
-  imgPath + 'lennaFull.jpg',
-  imgPath + 'lenna.png',
-  imgPath + 'toxie.jpg',
-];
+  imgPath+'colors.jpg',
+  imgPath+'eraserhead.jpg',
+  imgPath+'drop.jpg',
+  imgPath+'lennaFull.jpg',
+  imgPath+'lenna.png',
+  imgPath+'toxie.jpg',
+]
 
 const imageViewEl = $id('imageDataView');
 
-function loadImageAndGetData(url, index) {
-  return new Promise((resolve) => {
-    const imgEl = new Image();
+let allDone = -1;
+let allDoneCb = function(){};
+function setImageDataDelayed( imgEl, i ){
+  //setTimeout( (function(){
+  imgData[i] = getPixelDataFromImage( imgEl );
+  allDone--;
+  if( allDone==0 ){ allDoneCb(); }
+  //}), 8*i );
+}
+
+function init( cb ){
+  allDoneCb = cb;
+  allDone = 0;
+  imageUrls.forEach((url, i) => {
+    allDone++;
+    const containerEl = document.createElement('div');
+    const imgEl = document.createElement('img');
+    imgEl.onload = function(){
+      setImageDataDelayed( imgEl, i );
+    }
+    const h4El = document.createElement('h4');
+    const delBtnEl = document.createElement('button');
+    delBtnEl.innerText = 'X';
     imgEl.src = url;
-    imgEl.onload = function () {
-      addImgHTML( imgEl, index );
-      imgData[index] = getPixelDataFromImage(imgEl);
-      resolve();
-    };
+    imgEl.alt = url;
+    h4El.innerText = i;
+    containerEl.appendChild( delBtnEl );
+    containerEl.appendChild( h4El );
+    containerEl.appendChild( imgEl );
+    imageViewEl.appendChild( containerEl );
   });
+
 }
 
-function addImgHTML( imgEl, i ){
-  const containerEl = document.createElement('div');
-  containerEl.classList.add('imgWrap');
-  const h4El = document.createElement('h4');
-  const delBtnEl = document.createElement('button');
-  delBtnEl.onclick = function(e){
-    imageViewEl.removeChild(containerEl);
-    //refreshImgData();
-  }
-  h4El.innerText = i;
-  containerEl.appendChild( delBtnEl );
-  containerEl.appendChild( h4El );
-  containerEl.appendChild( imgEl );
-  imageViewEl.appendChild( containerEl );
-}
 
-async function init() {
-  imgData = []; // Reset imgData
-  const promises = imageUrls.map((url, index) => loadImageAndGetData(url, index));
-  await Promise.all(promises);
-  sendImgDataCb( imgData );
-}
-
-async function refreshImgData() {
-  const imgEls = imageViewEl.getElementsByTagName('img');
-  for (let i = 0; i < imgEls.length; i++) {
-    const el = imgEls[i];
-    imgData[i] = getPixelDataFromImage(el);
-  }
-  sendImgDataCb( imgData );
-}
 
 const Images = {
-  init: function( sendImgDataCbNew ){
-    sendImgDataCb = sendImgDataCbNew
-    init();
+  init: init,
+  getImageData: function(){
+    return imgData;
   },
-
 };
 
 export default Images;

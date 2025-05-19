@@ -3,7 +3,7 @@ const getOverlayTemplate = function(){
     <div id="overlay">
       <div id="overlayPromptBox">
         <h4 id="overlayInfo"> Really wanna to that ? </h4>
-        <input type="text" maxlength="8" name="overlayTextInput" placeholder="Text goes here..." id="overlayTextInput">
+        <input type="text" maxlength="16" size="16" name="overlayTextInput" placeholder="Text goes here..." id="overlayTextInput">
         <button type="button" id="overlayNoButton">No</button>
         <button type="button" id="overlayYesButton">Yes</button>
       </div>
@@ -38,6 +38,7 @@ const getOverlayTemplate = function(){
 }
 
 let showOverlay = undefined;
+let overlayActive = false;
 let cbYes = function(){ console.log("YES") }
 
 const init = function(){
@@ -68,10 +69,11 @@ const init = function(){
   }
 
   showOverlay = function( text, cbYesNew, textInput){
+    overlayActive = true;
     cbYes = cbYesNew;
     overlayInputEl.value = '';
     if( textInput ){  // need text input field
-      overlayInputEl.placeholder = textInput;
+      overlayInputEl.value = textInput;
       overlayInputEl.style.display = 'block';
     } else {  // NO need of text input field
       overlayInputEl.style.display = 'none';
@@ -84,6 +86,7 @@ const init = function(){
   }
 
   function hideOverlay(){
+    overlayActive = false;
     overlayEl.style.display = 'none';
   }
 
@@ -95,6 +98,11 @@ const Overlay = {
     overlayWrap.innerHTML = getOverlayTemplate();
     document.body.appendChild( overlayWrap );
     init();
+    document.body.addEventListener( 'keydown', function(e){
+      if( overlayActive == false ){ return; }
+      if( e.key == 'Enter' || e.key == ' '){ $id('overlayYesButton').click() }
+      if( e.key == 'Escape' || e.key == 'Backspace' ){ $id('overlayYesButton').click() }
+    });
   },
   show: function( text, cbYesNew, textInputBool){
     showOverlay( text, cbYesNew, textInputBool)

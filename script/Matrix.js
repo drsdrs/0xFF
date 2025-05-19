@@ -146,7 +146,7 @@ function init(canvasNew){
       gl.generateMipmap(gl.TEXTURE_2D);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      if (timeoutTime > FPS_60) {
+      if (timeoutTime < FPS_60) {
         latestTimeoutId = setTimeout( animate, timeoutTime);
       } else {
         latestTimeoutId = setTimeout( (function(){

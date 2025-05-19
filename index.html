@@ -11,17 +11,32 @@
 
 <body style="opacity: 0;">
 
+  <div id="btnContainer">
+    <div id="fileBtnContainer" class="color10" ></div>
+    <div id="loadBtnContainer" class="color10" ></div>
+    <div id="fpsBtnContainer"  class="color11" ></div>
+    <div id="audioBtnContainer"  class="color12" >
+      <button id="audioPlayBtn" type="button" name="playAudio">Play⏵</button>
+      <input id="volumeSlider" type="range" name="volumeSlider" value="20">
+    </div>
+    <div id="colorPaletteContainer"  class="color13" >
+      <div>THEME
+        <input id="colorSlider" type="number" name="colorSlider" size="3" max="999" min="-99" value="0">
+      </div>
+    </div>
+  </div>
+
   <div class="flex">
     <div id="canvasRow">
 
-      <div id="canvasContainer" class="colorBox">
+      <div id="canvasContainer" class="colorBox color0">
         <h4>CANVAS</h4>
         <canvas id="webglCanvas" width="256" height="256"></canvas>
       </div>
 
-      <div id="imageDataContainer" class="colorBox">
+      <div id="imageDataContainer" class="colorBox color1">
         <h4>IMAGES</h4>
-        <label type="button" name="button" class="fakeButton">
+        <label type="button" name="button" class="fakeButton color3">
           AddImage
           <input type="file" id="addImageButton" accept="image/*" style="display:none;">
         </label>
@@ -29,32 +44,39 @@
         </div>
       </div>
 
-      <div id="gamePadInfoContainer" class="colorBox">
+      <div id="gamePadInfoContainer" class="colorBox color12">
         <h4>GAMEPAD</h4>
         <span id="gamePadInfo" >none</span>
       </div>
 
     </div>
 
-    <div id="editorContainer">
+    <div id="editorContainer" class="">
 
-      <div id="codeEditorTitle" class="colorBox">
+
+
+      <div id="codeEditorTitle" class="colorBox color14">
         <h4>TITLE</h4>
-        <input type="text" id="codeEditorTitleInput" name="codeEditorTitle" placeholder="Name or short desription." maxLength="48" >
+        <input type="text" id="codeEditorTitleInput" name="codeEditorTitle" placeholder="Name or short desription." maxLength="64" >
       </div>
 
-      <div id="codeEditorSetup" class="colorBox">
+      <div id="codeEditorSetup" class="colorBox color4">
         <h4>SETUP</h4>
         <textarea></textarea>
       </div>
 
-      <div id="codeEditorLoop" class="colorBox">
-        <h4>LOOP</h4>
+      <div id="codeEditorPreLoop" class="colorBox color5">
+        <h4>PRE_LOOP</h4>
         <textarea></textarea>
       </div>
 
-      <div id="errorOutputContainer" class="colorBox">
-        <h4>ERROR</h4>
+      <div id="codeEditorLoop" class="colorBox color6">
+        <h4>GFX_LOOP</h4>
+        <textarea></textarea>
+      </div>
+
+      <div id="errorOutputContainer" class="colorBox color7">
+        <h4></h4>
         <pre><code id="errorOutput">No errors :)</code></pre>
       </div>
 
@@ -62,22 +84,20 @@
 
   </div>
 
-  <div id="compiledCodeContainer" class="colorBox">
-    <h4>COMPILED OUTPUT</h4>
+  <div id="coffeeCodeContainer" class="colorBox color8">
+    <h4>CONCATED COFFEE_SCRIPT</h4>
+    <div id="codeCoffee"><textarea id="codeCoffeeTextarea"></textarea></div>
+  </div>
+
+  <div id="compiledCodeContainer" class="colorBox color9">
+    <h4>COMPILED JS</h4>
     <div id="codeCompiled"><textarea id="codeCompiledTextarea"></textarea></div>
   </div>
 
-  <div id="menu">
-    <div id="btnContainer" class="invisible">
-      <button type="button" id="saveBtn" title="STRG+S">Save&Run</button>
-      <button type="button" id="deleteBtn">Delete</button>
-      <button type="button" id="newBtn">New</button>
-      <button type="button" id="exportBtn" name="button">Export</button>
-    </div>
-    <button type="button" id="collapseBtn" >⌗ MENU</button>
+  <div id="ticker" class="color9"></div>
 
-  </div>
-  <div id="ticker"></div>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js
+"></script>
 
   <script type="text/javascript" src="./script/globals.js"></script>
   <script type="text/javascript" src="./script/lib/coffeescript.js"></script>

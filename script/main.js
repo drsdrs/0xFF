@@ -12,6 +12,14 @@ import Storage from './Storage.js'
 import Matrix from './Matrix.js'
 import InfoTicker from './InfoTicker.js'
 import Images from './Images.js'
+import Synth from './Synth.js'
+import CssColor from './CssColor.js'
+
+const headerEl = $id('header');
+const btnContainer = $id('btnContainer')
+
+let bodyOpacity = 0;
+const selectedFpsIndex = 3;
 
 const offscreenCanvas = $id('webglCanvas').transferControlToOffscreen();
 
@@ -20,6 +28,13 @@ worker.onmessage = function(event) {
   c.l("WORKER SAYS.....", event.data);
 };
 
+/*----  Color.slider  ----*/
+$id('colorSlider').addEventListener( 'change', function(e){
+  CssColor.init( e.target.value );
+  localStorage.setItem('theme', e.target.value);
+});
+
+/*----  FPS selectBox  ----*/
 const fpsValues = [
   { value: 0,  content: 'Endless' },
   { value: 180 },
@@ -30,7 +45,12 @@ const fpsValues = [
   { value: 1 },
   { value: -1,  content: 'Stop'},
 ];
+const selectFpsCb = function( fpsNew ){
+  worker.postMessage({ setFps: fpsNew });
+}
+SelectBox.add( 'FPS', $id('fpsBtnContainer'), fpsValues, selectedFpsIndex, selectFpsCb);
 
+/*      Later...   */
 const scaleValues = [
   { value: 0,  content: '256x256' },
   { value: 1,  content: '128x128' },
@@ -40,75 +60,75 @@ const scaleValues = [
   { value: 5,  content: '8x8' }
 ];
 
+/*     FILE OPERATIONS    */
+const fileOperationValues = [
+  { value: 'SaveRun', content: 'Save and run', callback: savePrgCb },
+  { value: 'SaveAs' , callback: function(){
+    Overlay.show( 'Save as:', overlaySaveAsCb, Storage.getActivePrgName() );
+  }},
+  { value: 'Delete' , callback: function(){
+    Overlay.show( 'Delete program ?', overlayDeleteCb, false );
+    Editors.setCode( Storage.load() );
+  }},
+  { value: 'ExportProject', content: 'Export project' , callback: function(){ c.l('TODO :)'); } },
+  { value: 'ImportProject', content: 'Import project' , callback: function(){ c.l('TODO :)'); } },
+  { value: 'ExportHTML', content: 'Export standalone HTML' , callback: exportHTML },
+];
 
-const headerEl = $id('header');
-const btnContainer = $id('btnContainer')
+async function savePrgCb( newPrgName ){
+  if( newPrgName ){ Storage.setActivePrgName( newPrgName ); }
+  let compilationResult = await Editors.sendCode();
+  if( compilationResult ){ //  compilation Success
+    let activePrgName = Storage.getActivePrgName();
+    InfoTicker.addNonPermaText( 'File "'+activePrgName+'" saved.' );
+    Storage.save( activePrgName, Editors.getCode(), 'SetAsActive' );
+  } else {  // compilation Failed
+    InfoTicker.addNonPermaText( 'Not Saved! Errors...' );
+  }
+}
 
-/*---- Hamburger menu opener  ----*/
-$id('collapseBtn').addEventListener('click', function(e){
-  btnContainer.classList.toggle('invisible');
-});
-document.body.addEventListener('click', function(e){
-  if(
-    e.target.id == 'collapseBtn' ||
-    e.target.classList.contains('custom-select-box')
-  ){ return; }
+const overlaySaveAsCb = async function( newPrgName ){
+  InfoTicker.addNonPermaText( 'File saved as "'+newPrgName+'".' );
+  await savePrgCb( newPrgName );
+  makeFileSelectBox();
+}
 
-  btnContainer.classList.add('invisible');
-});
+const overlayDeleteCb = function( ){
+  InfoTicker.addNonPermaText('Program "'+Storage.getActivePrgName()+'" deleted.');
+  Storage.delete();
+  makeFileSelectBox();
+  Editors.setCode( Storage.load() );
+};
 
+SelectBox.add(
+  'FILE', $id('fileBtnContainer'), fileOperationValues, -1, null
+);
 
 /*----  Program file select  ----*/
-function overlayLoadCb(){
-  const prg = Storage.load( selectedPrg );
-  c.l("LoadPrg:", selectedPrg, prg );
+function loadPrgCb( prgName ){
+  c.l('loadPrgCb', prgName)
+  //Storage.save( Storage.getActivePrgName(), Editors.getCode(), 'SetAsActive' );
+  const prg = Storage.load( prgName );
   Editors.setCode( prg );
+  Storage.setActivePrgName( prgName );
+  InfoTicker.addNonPermaText('Program "'+prgName+'" loaded.');
 }
 
-function fileSelectCb(selectedPrg){
-  Overlay.show( 'Load program overwrites!', overlayLoadCb, false );
-}
 
 function makeFileSelectBox(){
   const prgList = Storage.list();
-  c.l("Programms:",prgList)
+  c.l("Programms: ",prgList)
   let selectPrgList = [];
   for (let i = 0; i < prgList.length; i++) {
-    console.log('PRG:',i , (prgList[i]) );
     selectPrgList.push( { value: prgList[i], content: prgList[i]} );
   }
 
   SelectBox.add(
-    'Program', btnContainer, selectPrgList, Storage.getActivePrgIndex(), fileSelectCb
+    'PRG', $id('loadBtnContainer'), selectPrgList, Storage.getActivePrgIndex(), loadPrgCb
   );
 }
 
-
-/*----      MAIN - INIT       ----*/
-let lastCompiledCode = '';
-const sendCodeCb = function( compiledCode ){
-  lastCompiledCode = compiledCode;
-  worker.postMessage( { functText: compiledCode } );
-}
-
-Images.init( function(){
-  worker.postMessage( {canvas: offscreenCanvas}, [offscreenCanvas]);
-  Overlay.init();
-  Storage.init();
-  const imageData = Images.getImageData();
-  worker.postMessage( { imageData: imageData } );
-  Editors.init( sendCodeCb );
-  SelectBox.init();
-  makeFileSelectBox();
-  Editors.setCode( Storage.load() );
-  worker.postMessage({ setFps: fpsValues[ selectedFpsIndex ].value });
-  fadeBodyIn();
-  //exportHTML();
-});
-
-
-//  EXPORT HTML
-
+/*      EXPORT HTML   */
 async function exportHTML(  ){
   let htmlTemplate = await loadText('./script/exporter/index.html');
   htmlTemplate = htmlTemplate.replace('/***_IMAGE_DATA_***/', JSON.stringify( Images.getImageData() ));
@@ -127,53 +147,7 @@ async function exportHTML(  ){
   return htmlTemplate;
 }
 
-
-$id('exportBtn').onclick = function(){
-  exportHTML();
-}
-
-
-/*----  FPS selectBox  ----*/
-const selectedFpsIndex = 3;
-const selectFpsCb = function( fpsNew ){
-  worker.postMessage({ setFps: fpsNew });
-
-}
-SelectBox.add( 'FPS', btnContainer, fpsValues, selectedFpsIndex, selectFpsCb);
-
-
-/*----  Events  ----*/
-
-$id('newBtn').onclick = function(){
-  Overlay.show( 'New program', overlayNewCb, 'Program name here...' );
-}
-
-$id('saveBtn').onclick = function(){
-  Overlay.show( 'Save program', overlaySaveCb, false );
-}
-
-$id('deleteBtn').onclick = function(){
-  Overlay.show( 'Delete program ?', overlayDeleteCb, false );
-}
-
-
-const overlaySaveCb = function( ){
-  Storage.save( Editors.getCode() );
-}
-
-const overlayNewCb = function( text ){
-  const addResult = Storage.new( text, Editors.getCode() );
-  makeFileSelectBox();
-}
-
-const overlayDeleteCb = function( ){
-  Storage.delete();
-  makeFileSelectBox();
-};
-
-
 /*----  GamePad fetch loop  ----*/
-
 const fetchSkipFrames = 2;
 let fetchSkiptCount = fetchSkipFrames;
 
@@ -199,16 +173,50 @@ function fetchGamepad(){
   if( (gamepadToHtmlCount++)%10 == 0 ){ gamePadInfoEl.innerText = navigator.getGamepads()[0].id;}
   worker.postMessage( { gamepadData: gamepadData } );
   requestAnimationFrame( fetchGamepad );
+  //  TODO editor should get gamepad data, imgData also, 
+  // to try code better
 }
 
 fetchGamepad();
 
+/*      INTRO       */
 function fadeBodyIn(){
-  let opacity = Number(document.body.style.opacity)
-  if( opacity < 1 ){
-    document.body.style.opacity = opacity+0.005;
+  if( bodyOpacity < 1 ){
+    document.body.style.opacity = bodyOpacity;
+    bodyOpacity += .0125;
   } else {
-    return document.body.style.opacity = null;
+    return document.body.style = null;
   }
   requestAnimationFrame( fadeBodyIn );
 }
+
+let lastCompiledCode = '';
+const sendCodeCb = function( compiledCode ){
+  lastCompiledCode = compiledCode;
+  // not here !!! Storage.save( Storage.getActivePrgName(), Editors.getCode() ) 
+  worker.postMessage( { functText: compiledCode } );
+}
+
+function sendImageDataCb( imageData ){
+  worker.postMessage( { imageData: imageData } );
+}
+
+/*----      MAIN - INIT       ----*/
+const loadetTheme = localStorage.getItem('theme');
+$id('colorSlider').value = loadetTheme|0;
+CssColor.init( loadetTheme );
+
+await Storage.init();
+Editors.init( sendCodeCb );
+Overlay.init();
+SelectBox.init();
+await Images.init( sendImageDataCb ); // removed await !?!?
+Editors.setCode( Storage.load() );
+
+makeFileSelectBox();
+
+fadeBodyIn();
+
+worker.postMessage( { setFps: fpsValues[selectedFpsIndex].value } );
+worker.postMessage( { canvas: offscreenCanvas }, [offscreenCanvas] );
+  

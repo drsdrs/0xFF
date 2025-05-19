@@ -1,109 +1,145 @@
 const storagePrefix = 'prg_';
-let activePrgName = '';
-let prgList;
 
-function addToPrgList( prgName ){
-  prgList.push(prgName);
-  localStorage.setItem('prgList', JSON.stringify( prgList ));
+
+function getPrgList(){
+  return JSON.parse( localStorage.getItem('prgList') );
 }
-function removeFromPrgList( prgName ){
-  for (let i = 0; i < prgList.length; i++) {
-    if ( prgName == prgList[i] ){ prgList.splice( i, 1 ); }
+
+function setPrgList( prgList ){
+  localStorage.setItem('prgList', JSON.stringify(prgList));
+}
+
+
+function setActivePrgName( newActivePrgName ){
+  c.l( 'setActivePrgName', newActivePrgName );
+  localStorage.setItem( 'activePrgName', newActivePrgName);
+}
+
+function getActivePrgName(){
+  let activePrgName = localStorage.getItem( 'activePrgName' );
+  if( activePrgName ){ return activePrgName; }
+  let prgList = getPrgList();
+  c.l("getactivePrgName", prgList)
+  if( prgList[0] && prgList[0].length ){
+    activePrgName = prgList[0];
+    setActivePrgName( activePrgName );
+    return;
   }
-  localStorage.setItem('prgList', JSON.stringify( prgList ));
+  setActivePrgName( '' );
+  return '';
 }
 
-function newPrg( prgName, codeObj ){
-  if( prgName == undefined || prgName.length == 0 ){ return c.error("No name given") }
-  let existingItem = localStorage.getItem( storagePrefix+prgName );
-  if( existingItem == undefined ){  // TODO for now Overwrite, but later need Overlay question
+function addToPrgList(prgName) {
+  let prgList = getPrgList();
+  if (!prgList.includes(prgName)) {
+    prgList.push(prgName);
+    setPrgList( prgList);
+  }
+}
+
+function removeFromPrgList(prgName) {
+  let prgList = getPrgList();
+  prgList = prgList.filter(name => name !== prgName);
+    setPrgList( prgList);
+}
+
+function removePrg() {
+  let prgList = getPrgList();
+  removeFromPrgList( getActivePrgName() );
+  localStorage.removeItem( storagePrefix + getActivePrgName() );
+  if( prgList.length == 0 ){  // make empty one IF prglist.len is zero
+    Storage.save('New', { title: 'Empty', setup: '', loop: '' });
+  }
+  setActivePrgName( prgList[0] );
+}
+
+function savePrg(prgName, codeObj) {
+  c.l("savePrg", prgName);
+  let prgList = getPrgList();
+  if ( prgList.includes( prgName )==false ) {
     addToPrgList( prgName );
-    return true;
   }
-  activePrgName = prgName;
-  localStorage.setItem( 'savedActivePrgName', activePrgName );
-  savePrg( codeObj );
-  return true;
+
+  localStorage.setItem(storagePrefix + prgName, JSON.stringify(codeObj));
 }
 
-function removePrg( ){
-  removeFromPrgList( activePrgName );
-  localStorage.removeItem( storagePrefix+activePrgName );
+function loadPrg( prgName ) {
+  return JSON.parse(
+    localStorage.getItem(storagePrefix + prgName)
+  );
 }
 
-function savePrg(  codeObj ){
-  localStorage.setItem( storagePrefix+activePrgName, JSON.stringify( codeObj ) );
-}
-
-function loadPrg( prgName ){
-  if( prgName ){
-    activePrgName = prgName;
-  } else {
-    prgName = activePrgName;
+const loadText = async (url) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
   }
-  return JSON.parse( localStorage.getItem( storagePrefix+prgName ) );
+  return await response.text();
 }
 
+async function loadAndSaveDemos() {
+  const demos = ['demo_gamepad', 'demo_simple', 'demo_images'];
 
-const readTxt = async( url )=> {
-  let response = await fetch (url);
-  const txt = await response.text().then(( str ) => {
-      return str.split('\r');    // return the string after splitting it.
-  });
-}
+  const demoPromises = demos.map(async (demoName, i) => {
+    try {
+      const demoCode = await loadText(`./script/templates/${demoName}.coffee`);
 
+      // Split the demo code
+      let parts = demoCode.split('###_LOOP_###');
+      if (parts.length < 2) {
+        throw new Error(`Missing ###_LOOP_### marker in demo code for ${demoName}`);
+      }
+      const loopCode = parts.pop(); // Get the loop code
 
-function loadDemosAndSave(){
-  const demos = [ 'demo_gamepad' ];
+      parts = parts[0].split('###_SETUP_###');
+      if (parts.length < 2) {
+        throw new Error(`Missing ###_SETUP_### marker in demo code for ${demoName}`);
+      }
+      const setupCode = parts.pop(); // Get the setup code
 
-  demos.forEach(async(demoName, i) => {
-    const demoCode = await loadText('./script/templates/'+demoName+'.coffee');
-    /*  Overwrite demos onload, for now.  */
-    // let foundDemoInPrgList = false;
-    // prgList.forEach((item, i) => {
-    //   if( foundDemoInPrgList ){ return; }
-    //   if( item == demoName ){ return foundDemoInPrgList = true; }
-    // });
-    let firstSplit = demoCode.split('###_LOOP_###');
-    const loopCode = firstSplit.pop();
-    firstSplit = firstSplit[0].split('###_SETUP_###');
-    const setupCode = firstSplit.pop();
-    const descr = firstSplit[0].split('###_TITLE_###').pop();
-    Storage.new( demoName, { title: descr.trim(), setup: setupCode.trim(), loop: loopCode.trim() } );
-  });
+      const descrParts = parts[0].split('###_TITLE_###');
+      if (descrParts.length < 2) {
+        throw new Error(`Missing ###_TITLE_### marker in demo code for ${demoName}`);
+      }
+      const descr = descrParts.pop(); // Get the description
 
-}
+      // Save the demo
+      savePrg(
+        demoName,
+        { title: descr.trim(), setup: setupCode.trim(), loop: loopCode.trim() }
+      );
 
-Storage = {
-  init: function( ){
-
-    const prgListTemp = localStorage.getItem('prgList');
-    if( prgListTemp == undefined ){
-      localStorage.setItem('prgList', JSON.stringify([]) );
-      prgList = [];
-    } else {
-      prgList = JSON.parse( prgListTemp );
-      activePrgName = prgList[0];
+      //c.l("Done loading demo", i, demoName, descr, setupCode);
+    } catch (error) {
+      console.error(`Error loading demo ${demoName}:`, error);
     }
+  });
 
-    loadDemosAndSave();
+  await Promise.all(demoPromises);
+}
 
-    const savedActivePrgName = localStorage.getItem('savedActivePrgName');
-    if( savedActivePrgName ){ activePrgName = savedActivePrgName; }
-    else { activePrgName = prgList[0]; }
+function initPrgList(){
+  if( getPrgList() == undefined ){
+    setPrgList( new Array() );
+  }
+}
 
+const Storage = {
+  init: async function(cb) {
+    initPrgList();
+    await loadAndSaveDemos();
+    if( cb ){ cb(); }
   },
-  new: newPrg,
   remove: removePrg,
   save: savePrg,
-  list: function(  ){ return prgList; },
-  getActivePrgIndex: function(  ){
-    for (let i = 0; i < prgList.length; i++) {
-      if( activePrgName == prgList[i] ) return i;
-    }
+  list: function() { return getPrgList(); },
+  getActivePrgIndex: function() {
+    return getPrgList().indexOf( getActivePrgName() );
   },
+  getActivePrgName: getActivePrgName,
+  setActivePrgName: setActivePrgName,
   load: loadPrg,
   delete: removePrg
 }
 
-export default Storage
+export default Storage;

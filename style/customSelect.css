@@ -1,31 +1,32 @@
 .custom-select-box {
   position: relative;
   display: inline-block;
-
   cursor: pointer;
 }
 
 .arrow {
   display: inline-block;
   float: right;
+  padding-left: 12px;
   /* transition: transform 0.15s; */
 }
 
 .options-container {
   position: absolute;
-  left: 100%;
-  bottom: 0px;
   width: 100%;
   display: none;
   z-index: 1;
+  top: 100%;
+  left: 0;
+  background-color: #555;
 }
 .options-container img{
   width: 100%;
 }
 
 .option {
-  background: #125;
   cursor: pointer;
+  width: 100%;
 }
 
 .custom-select-box.open {

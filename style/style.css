@@ -13,6 +13,8 @@ body {
   margin: 0;
   background: #222;
   overflow-x: hidden;
+  border-bottom: 2px solid #ccc;
+  border-left: 2px solid #ccc;
 }
 
 img {
@@ -31,7 +33,7 @@ img {
   width: 34%;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   #editorContainer{
     width: 100%;
   }
@@ -50,7 +52,7 @@ img {
   z-index: 9999;
 }
 
-#gamePadInfoContainer{ height: 100%; }
+#gamePadInfoContainer{ height: 80%; }
 
 #infoHeader .scrollingText{
   display: inline-block;
@@ -85,70 +87,147 @@ canvas {
   max-width: 512px;
 }
 
-
-
-#collapseBtn{
-  background: #111;
-  float: left;
-  border: 0;
-  text-align: center;
-  padding: 4px;
-  margin:0;
-  font-weight: bold;
-  font-size: 1.1em;
-}
-
 button:hover, .fakeButton:hover, .custom-select-box:hover, .custom-select-box.open,
 #collapseBtn:hover, .option:hover {
-  background: #727;
+  background: #222;
 }
 
-button,label, .fakeButton, .custom-select-box, .custom-select-box, .option {
+.custom-select-box, .custom-select-box, .option, #volumeSlider, #audioPlayBtn {
   display: inline-block;
   border: 0;
-  background: #237;
-  padding: 6px;
-  width: 100%;
+  padding: 8px 12px;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   text-align: left;
+  width: 100%;
+  border-top: 2px solid #ccc;
+  border-right: 2px solid #ccc;
+  background: inherit;
 }
 
+#colorPaletteContainer{
+  width: 125px;
+  padding: 4px 12px;
+  white-space: nowrap;
+  border-top: 2px solid #ccc;
+  border-right: 2px solid #ccc;
 
+}
+#colorPaletteContainer input{
+  background-color: #222;
+}
 
 .colorBox {
   color: white;
   width: 100%;
-  background: #226;
   display: inline-block;
   font-family: monospace;
   font-size: 14px;
   padding: 8px;
+  border-top: 2px solid #ccc;
+  border-right: 2px solid #ccc;
 }
 
-.CodeMirror-focused, #codeEditorTitle input[type="text"]:focus { outline: 1px dashed white; }
+#audioBtnContainer{
+  white-space: nowrap;
+  border-top: 2px solid #ccc;
+  border-right: 2px solid #ccc;
+}
 
-#codeEditorSetup { background: #626;}
-#errorOutputContainer { background: #262; height: 100%;}
-#compiledCodeContainer{ background: #880;}
-#gamePadInfoContainer{ background: #A42; }
-#codeEditorTitle{ background: #42A; }
-#canvasContainer{ background: #402; }
+#audioPlayBtn{
+  background-color: inherit;
+  border: 0;
+  width: 60px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
 
+#volumeSlider{
+  width: 70%;
+  float: right;
+  margin-right: 8px;
+}
 
-.imgWrap{
-  height: 128px;
+.CodeMirror-focused,
+#codeEditorTitle input[type="text"]:focus-visible,
+#btnContainer input:focus-visible {
+  outline: 1px dashed white;
+}
+
+#errorOutputContainer { height: 100%;}
+#errorOutputContainer h4::before{ content:'NO ERRORS :)';}
+#errorOutputContainer.error h4::before{ content:'ERROR :(';}
+#errorOutputContainer.error { background: #A22;}
+
+#imageDataContainer > h4{
   display: inline-block;
-  margin-top: -20px;
+  padding: 2px 8px;
 }
 
-.imgWrap h2{
+#imageDataView {
+  display: flex;
+    gap: 1rem; /* Optional, space between children */
+  flex-wrap: wrap; /* Optional, for wrapping multiple items */
+}
+.fakeButton {
+  padding: 6px 8px;
   position: relative;
-  color: black;
-  text-shadow: 2px 0px white;
-  top: 30px;
-  left: 6px;
+  top: 0;
+  right: 0px;
+  z-index: 9999;
+  margin: 0;
+  float: right;
+
+}
+.imgWrap{
+  width: 28%;
+  aspect-ratio: 1/1;   /* Modern browsers only; fallback is width/height */
+  overflow: hidden;
+  position: relative;
+  background: #eee;    /* Optional, for placeholder color */
+  flex-shrink: 0;      /* Prevents shrinking in flex layouts */
+}
+
+.imgWrap h4{
+  position: absolute;  /* Use absolute for overlay inside relative parent */
+  color: white;
+  background-color:#222;
+  font-size: 17px;
+  padding: 2px;
+  top: 1px;
+  left: 1px;
+  z-index: 1;
+  margin: 0 auto;
+  width: 22px;
+  height: 22px;
+  text-align: center;
+}
+.imgWrap img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* Keeps aspect ratio, fills square, crops excess */
+  display: block;
+}
+
+.imgWrap button::before { content: 'X' }
+.imgWrap button{
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  width: 22px;
+  height: 22px;
+  font-size: 17px;
+  font-weight: bold;
+  accent-color: ;
+  background-color: #222;
+  border: 0;
+  outline: 0;
+  cursor: pointer;
+}
+
+#colorSlider{
+  float: right;
 }
 
 .verticalScrollbar { /*maybe usefull later*/
@@ -189,50 +268,24 @@ button,label, .fakeButton, .custom-select-box, .custom-select-box, .option {
   width: auto;
   float: right;
   margin-top: -4px;
-  background: #222;
-}
-
-#imageDataContainer {
-  background: #624;
-}
-#imageDataContainer h4 {
-  display:inline-block;
-  padding-bottom: 6px;
-}
-
-#imageDataView {
-}
-
-#imageDataView img { max-height: 75px; }
-#imageDataView div:hover { outline:3px solid black; }
-
-#imageDataView button {
-  display: inline-block;
-  width: auto;
-  left: 88%;
-  position: relative;
-  top: -53px;
-}
-
-#imageDataView div {
-  display: inline-block;
-}
-
-#imageDataView h4 {
-  display: inline-block;
-  position: relative;
-  left: 22px;
-  top: -55px;
-  z-index: 9999;
-  text-shadow: 1px 1px black;
-  font-size: 24px;
 }
 
 #codeEditorTitle { display: flex; }
 #codeEditorTitle h4{ display: inline-block; }
-#codeEditorTitle input[type="text"]{
-  width: 100%;
+#codeEditorTitle input[type="text"], #btnContainer input{
   border: 0;
-  padding-left: 12px;
-  background-color: #222;
+  outline: 0;
+  padding: 4px 4px 4px 12px;
+  font-size: 14px;
+  background: #222;
 }
+
+#codeEditorTitle input[type="text"]{ width: 100%; }
+
+#btnContainer{
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+#btnContainer>div{  flex-grow: 1;}

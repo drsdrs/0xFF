@@ -1,9 +1,14 @@
 const codeTitleEl = $id('codeEditorTitle');
 const codeContainerLoopEl = $id('codeEditorLoop');
 const codeContainerSetupEl = $id('codeEditorSetup');
+const codeEditorPreLoopEl = $id('codeEditorPreLoop');
+
 const codeCompiledEl = $id('codeCompiled');
+const codeCoffeeEl = $id('codeCoffee');
 const errorEl = $id('errorOutput');
+const errorH4El = errorEl.children[0];
 const errorOutputContainer = $id('errorOutputContainer');
+
 let keyKeys = {};
 let saveCodeCb = null;
 
@@ -33,23 +38,29 @@ let codeMirrorOptions = { // Config for CodeMirror
 };
 
 var editorSetup = CodeMirror.fromTextArea(
-  codeContainerSetupEl.getElementsByTagName('textarea')[0],
-  codeMirrorOptions
+  codeContainerSetupEl.getElementsByTagName('textarea')[0], codeMirrorOptions
 );
+
 var editorLoop = CodeMirror.fromTextArea(
-  codeContainerLoopEl.getElementsByTagName('textarea')[0],
-  codeMirrorOptions
+  codeContainerLoopEl.getElementsByTagName('textarea')[0], codeMirrorOptions
+);
+var editorPreLoop = CodeMirror.fromTextArea(
+  codeEditorPreLoopEl.getElementsByTagName('textarea')[0], codeMirrorOptions
 );
 
 codeMirrorOptions.readOnly = true;
+
+var coffeeCodeEditor = CodeMirror.fromTextArea(
+  codeCoffeeEl.getElementsByTagName('textarea')[0], codeMirrorOptions
+);
+
 codeMirrorOptions.mode = 'javascript';
 
 var compiledCodeEditor = CodeMirror.fromTextArea(
-  codeCompiledEl.getElementsByTagName('textarea')[0],
-  codeMirrorOptions
+  codeCompiledEl.getElementsByTagName('textarea')[0], codeMirrorOptions
 );
 
-async function getAndSendCode( target ){
+async function getAndSendCode( ){
   let loop = editorLoop.getValue();
   let setup = editorSetup.getValue();
 
@@ -67,15 +78,13 @@ async function getAndSendCode( target ){
   try {
     compiledCode = CoffeeScript.compile(fullCode, {bare: true})
   } catch (e) {
-    compiledCodeEditor.mode = 'coffeescript';
-    compiledCodeEditor.setValue( fullCode );
     errorEl.innerText = e;
-    errorEl.style.background = '#622';
-    errorOutputContainer.style.background = '#622';
+    errorOutputContainer.classList.add('error')
     c.error(e);
-    return
+    return false;
   }
 
+  coffeeCodeEditor.setValue( fullCode );
   compiledCodeEditor.setValue( compiledCode );
   let codeRes = new Function('img', compiledCode);
 
@@ -92,15 +101,14 @@ async function getAndSendCode( target ){
 
   if(errMsg){
     errorEl.innerText = errMsg;
-    errorEl.style.background = '#622';
-    errorOutputContainer.style.background = '#622';
+    errorOutputContainer.classList.add('error')
     c.error(errMsg);
-    return;
+    return false;
   } else {
     errorEl.innerText =
-      'No errors, result is: \nred:'+res[0]+", blue:"+res[1]+", green:"+res[2];
-    errorEl.style.background = '#262';
-    errorOutputContainer.style.background = '#262';
+      'Result is: \nred:'+res[0]+", blue:"+res[1]+", green:"+res[2];
+    errorOutputContainer.classList.remove('error')
+
   }
   saveCodeCb( compiledCode );
   return compiledCode;
@@ -132,18 +140,19 @@ const Editors = {
   },
   getCode: function(){
     return {
-      title: $id('codeEditorTitleInput').value.replace(/[^a-zA-Z0-9]/g, '_'),
+      title: $id('codeEditorTitleInput').value,//.replace(/[^a-zA-Z0-9]/g, '_'),
       setup: editorSetup.getValue(),
       loop: editorLoop.getValue()
     }
   },
   setCode: function( code ){
     if( code == undefined ) return;
-    $id('codeEditorTitleInput').value = code.title.replace(/[^a-zA-Z0-9]/g, '_');
+    $id('codeEditorTitleInput').value = code.title;//.replace(/[^a-zA-Z0-9]/g, '_');
     editorSetup.setValue( convertTabsToSpaces( code.setup ) );
     editorLoop.setValue( convertTabsToSpaces( code.loop ) );
-    getAndSendCode( codeContainerLoopEl );
+    getAndSendCode( );
   },
+  sendCode: getAndSendCode,
 }
 
 export default Editors
