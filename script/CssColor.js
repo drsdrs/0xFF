@@ -118,12 +118,9 @@ function generatePalette(numHues) {
 
       cssOutput += `.color${i} { background-color: ${normalColor}; }\n`;
 
-
     }
-
-    // Append the CSS to a <style> element
+    
     styleElement.textContent = cssOutput;
-
 }
 
 const CssColor = {
@@ -132,6 +129,7 @@ const CssColor = {
     if( seedNew ){
       seed = seedNew*Math.PI;
       Rnd.seed(seed);
+
     }
     generatePalette( 32 );
 
