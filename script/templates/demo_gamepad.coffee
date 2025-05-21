@@ -1,9 +1,11 @@
 ###_TITLE_###
 Example Gamepad
-
 ###_SETUP_###
-img[0][i]
-
+while i < pixels.length
+  pixels[i] = t&t>>8
+  i++
+###_PRE_LOOP_###
+0
 ###_LOOP_###
 r = g = b = t&t>>8
 if gp.btn[0] then g = img[0][i+1]

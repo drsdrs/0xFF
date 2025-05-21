@@ -9,11 +9,12 @@ import Editors from './Editors.js'
 import Overlay from './Overlay.js'
 import SelectBox from './SelectBox.js'
 import Storage from './Storage.js'
-import Matrix from './Matrix.js'
+//import Matrix from './Matrix.js'
 import InfoTicker from './InfoTicker.js'
 import Images from './Images.js'
 import Synth from './Synth.js'
 import CssColor from './CssColor.js'
+import Rnd from './Rnd.js'
 
 const headerEl = $id('header');
 const btnContainer = $id('btnContainer')
@@ -160,17 +161,29 @@ function fetchGamepad(){
   const navigatorGamepad = navigator.getGamepads()[0];
   if( navigatorGamepad == undefined ){ return requestAnimationFrame( fetchGamepad ); }
 
-  let gamepadData = { axis: [], btn: [] };
-  for (let i = 0; i < navigatorGamepad.buttons.length; i++) {
+  let gamepadData = { axis: {x:0,y:0}, btn: [] };
+  for (let i = 0; i < 4; i++) {
     if( navigatorGamepad.buttons[i].pressed ){ gamepadData.btn[i] = true; }
   }
 
-  for (let i = 0; i < navigatorGamepad.axes.length; i++) {
-    gamepadData.axis[i] = (128+navigatorGamepad.axes[i]*127)>>0;
-  }
+  gamepadData.axis.x = (128+navigatorGamepad.axes[0]*127)>>0;
+  gamepadData.axis.y = (128+navigatorGamepad.axes[1]*127)>>0;
+  
 
   //c.l( gamepadData.axes )
-  if( (gamepadToHtmlCount++)%10 == 0 ){ gamePadInfoEl.innerText = navigator.getGamepads()[0].id;}
+  if( (gamepadToHtmlCount++)%10 == 0 ){
+    gamePadInfoEl.innerText = navigator.getGamepads()[0].id+'\n'
+    gamePadInfoEl.innerText += 'Axis X: '+gamepadData.axis.x.toFixed(2)+' ';
+    gamePadInfoEl.innerText += ' Y:'+gamepadData.axis.y.toFixed(2)+'\n';
+    for (let i = 0; i < 4; i++) {
+      if( i!=0 ) gamePadInfoEl.innerText += ' | '
+      if( gamepadData.btn[i] ){
+        gamePadInfoEl.innerText += ' BTN'+i+': 1';
+      } else {
+        gamePadInfoEl.innerText += ' BTN'+i+': 0';
+      }
+    }
+  }
   worker.postMessage( { gamepadData: gamepadData } );
   requestAnimationFrame( fetchGamepad );
   //  TODO editor should get gamepad data, imgData also, 
@@ -204,14 +217,16 @@ function sendImageDataCb( imageData ){
 /*----      MAIN - INIT       ----*/
 const loadetTheme = localStorage.getItem('theme');
 $id('colorSlider').value = loadetTheme|0;
-CssColor.init( loadetTheme );
+CssColor.init( loadetTheme, Rnd );
 
 await Storage.init();
 Editors.init( sendCodeCb );
 Overlay.init();
 SelectBox.init();
 await Images.init( sendImageDataCb ); // removed await !?!?
-Editors.setCode( Storage.load() );
+
+let activePrg = Storage.load( Storage.getActivePrgName() );
+Editors.setCode( activePrg );
 
 makeFileSelectBox();
 

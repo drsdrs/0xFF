@@ -1,6 +1,7 @@
 const styleElement = document.createElement('style');
 document.head.appendChild(styleElement);
-
+let seed = 0;
+let Rnd = undefined;
 
 /**
  * Converts an RGB color value to HSL. Conversion formula
@@ -73,13 +74,6 @@ function hslToRgb(h, s, l) {
   return [ r * 255, g * 255, b * 255 ];
 }
 
-
-function seededRandom(seed) {
-    // A simple seeded random number generator
-    const x = Math.sin(seed) * 999999999;
-    return x - Math.floor(x);
-}
-
 function rgbToHtmlColor( color ){
   return `#${((1 << 24) + ((color[0]&0xFF) << 16) + ((color[1]&0xFF) << 8) + (color[2]&0xFF)).toString(16).slice(1).toUpperCase()}`
 }
@@ -96,13 +90,24 @@ function adjustColor(color, factor) {
     return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
 }
 
-function generatePalette(numHues, seed) {
+function generatePalette(numHues) {
     let cssOutput = '';
-    let startHue = seededRandom(seed++)*8;
-    const hueInc = seededRandom(seed++)*seededRandom(seed++)*20;//(1/(numHues/2))+(seededRandom(seed++)/(numHues/2));
-    let val = .05+seededRandom(seed++)/4;
+    let startHue = Rnd.next()*Rnd.next()*100;
+    let hueInc = Rnd.next()*Rnd.next()*2;//(1/(numHues/2))+(Rnd.next()/(numHues/2));
+    let val = 0.2 + Rnd.next()*Rnd.next()/18;
     let sat = val;
-    if(seededRandom(seed++)>.5) sat = 1-val;
+
+    if( Rnd.next()<.1 ){ hueInc = 0;}
+    else if( Rnd.next()>.9 ){ hueInc = 1/numHues; }
+
+    if( Rnd.next()>.9 ){
+      sat = 0; 
+      val = Rnd.next()/3;
+    } else if( Rnd.next()>.5 ){
+      sat = 1-val
+    }
+    c.l(Rnd.next())
+
     for (let i = 0; i < numHues; i+=1) {
       startHue += hueInc;
 
@@ -111,7 +116,7 @@ function generatePalette(numHues, seed) {
       const normalColor = baseColor;
       const darkColor = adjustColor(baseColor, 0.75);
 
-      cssOutput += `.color${i} { background-color: ${lightColor}; }\n`;
+      cssOutput += `.color${i} { background-color: ${normalColor}; }\n`;
 
 
     }
@@ -122,7 +127,15 @@ function generatePalette(numHues, seed) {
 }
 
 const CssColor = {
-  init: function( seed ){ generatePalette( 16, seed ); }
+  init: function( seedNew, RndNew ){
+    if( RndNew ){ Rnd = RndNew;}
+    if( seedNew ){
+      seed = seedNew*Math.PI;
+      Rnd.seed(seed);
+    }
+    generatePalette( 32 );
+
+  }
 }
 
 export default CssColor

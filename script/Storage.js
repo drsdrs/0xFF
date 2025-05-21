@@ -48,7 +48,7 @@ function removePrg() {
   removeFromPrgList( getActivePrgName() );
   localStorage.removeItem( storagePrefix + getActivePrgName() );
   if( prgList.length == 0 ){  // make empty one IF prglist.len is zero
-    Storage.save('New', { title: 'Empty', setup: '', loop: '' });
+    Storage.save('New', { title: 'Empty', setup: '', preLoop: '', loop: '' });
   }
   setActivePrgName( prgList[0] );
 }
@@ -64,6 +64,8 @@ function savePrg(prgName, codeObj) {
 }
 
 function loadPrg( prgName ) {
+  const prg = localStorage.getItem(storagePrefix + prgName);
+  if( prg == undefined ){ c.error("No prg found with name "+prgName); return 'No prg with name '+prgName+' '+prg }
   return JSON.parse(
     localStorage.getItem(storagePrefix + prgName)
   );
@@ -83,14 +85,18 @@ async function loadAndSaveDemos() {
   const demoPromises = demos.map(async (demoName, i) => {
     try {
       const demoCode = await loadText(`./script/templates/${demoName}.coffee`);
-
-      // Split the demo code
       let parts = demoCode.split('###_LOOP_###');
       if (parts.length < 2) {
         throw new Error(`Missing ###_LOOP_### marker in demo code for ${demoName}`);
       }
       const loopCode = parts.pop(); // Get the loop code
-
+      
+      parts = parts[0].split('###_PRE_LOOP_###');
+      if (parts.length < 2) {
+        throw new Error(`Missing ###_PRE_LOOP_### marker in demo code for ${demoName}`);
+      }
+      const preLoopCode = parts.pop(); // Get the setup code
+      
       parts = parts[0].split('###_SETUP_###');
       if (parts.length < 2) {
         throw new Error(`Missing ###_SETUP_### marker in demo code for ${demoName}`);
@@ -104,9 +110,12 @@ async function loadAndSaveDemos() {
       const descr = descrParts.pop(); // Get the description
 
       // Save the demo
-      savePrg(
-        demoName,
-        { title: descr.trim(), setup: setupCode.trim(), loop: loopCode.trim() }
+      savePrg( demoName, {
+          title: descr, 
+          setup: setupCode, 
+          preLoop: preLoopCode, 
+          loop: loopCode
+        }
       );
 
       //c.l("Done loading demo", i, demoName, descr, setupCode);

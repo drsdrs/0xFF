@@ -1,9 +1,11 @@
 ###_TITLE_###
 Simple demo
-
 ###_SETUP_###
-t&t>>8
-
+while i < pixels.length
+  pixels[i] = t&t>>8
+  i++
+###_PRE_LOOP_###
+0
 ###_LOOP_###
 r += 1
 g = t^t>>8

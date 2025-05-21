@@ -2,7 +2,12 @@
 Use images in the imageslider for drawing onto the canvas
 
 ###_SETUP_###
-img[4][i]
+while i < pixels.length
+  pixels[i] = t&t>>8
+  i++
+
+###_PRE_LOOP_###
+0
 
 ###_LOOP_###
 r = img[4][i]&t>>8

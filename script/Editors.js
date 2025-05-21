@@ -44,6 +44,7 @@ var editorSetup = CodeMirror.fromTextArea(
 var editorLoop = CodeMirror.fromTextArea(
   codeContainerLoopEl.getElementsByTagName('textarea')[0], codeMirrorOptions
 );
+
 var editorPreLoop = CodeMirror.fromTextArea(
   codeEditorPreLoopEl.getElementsByTagName('textarea')[0], codeMirrorOptions
 );
@@ -62,6 +63,7 @@ var compiledCodeEditor = CodeMirror.fromTextArea(
 
 async function getAndSendCode( ){
   let loop = editorLoop.getValue();
+  let preLoop = editorLoop.getValue();
   let setup = editorSetup.getValue();
 
   let codeLines = loop.split('\n').filter(line => line.trim() !== '');
@@ -70,13 +72,23 @@ async function getAndSendCode( ){
   }
   loop = codeLines.join('\n');
 
-  let fullCode = await loadText('./script/templates/mainLoop.coffee');
-  fullCode = fullCode.replace('###_SETUP_###', setup);
-  fullCode = fullCode.replace('###_LOOP_###', loop);
-  fullCode = convertTabsToSpaces( fullCode );
+  codeLines = preLoop.split('\n').filter(line => line.trim() !== '');
+  for (let i = 0; i < codeLines.length; i++) {
+    codeLines[i] = '\t' + codeLines[i]; // Add a tab at the beginning of each line
+  }
+  preLoop = codeLines.join('\n');
+
+  let fullCoffeeCode = await loadText('./script/templates/mainLoop.coffee');
+  fullCoffeeCode = fullCoffeeCode.replace('###_SETUP_###', setup);
+  fullCoffeeCode = fullCoffeeCode.replace('###_PRE_LOOP_###', preLoop);
+  fullCoffeeCode = fullCoffeeCode.replace('###_LOOP_###', loop);
+  fullCoffeeCode = convertTabsToSpaces( fullCoffeeCode );
+
   let compiledCode = '';
+  coffeeCodeEditor.setValue( fullCoffeeCode );
+
   try {
-    compiledCode = CoffeeScript.compile(fullCode, {bare: true})
+    compiledCode = CoffeeScript.compile(fullCoffeeCode, {bare: true})
   } catch (e) {
     errorEl.innerText = e;
     errorOutputContainer.classList.add('error')
@@ -84,7 +96,6 @@ async function getAndSendCode( ){
     return false;
   }
 
-  coffeeCodeEditor.setValue( fullCode );
   compiledCodeEditor.setValue( compiledCode );
   let codeRes = new Function('img', compiledCode);
 
@@ -136,21 +147,23 @@ function keyDown(e){
 const Editors = {
   init: function( saveCodeCbNew ){
     saveCodeCb = saveCodeCbNew;
-    //getAndSendCode()
   },
   getCode: function(){
     return {
       title: $id('codeEditorTitleInput').value,//.replace(/[^a-zA-Z0-9]/g, '_'),
       setup: editorSetup.getValue(),
+      preLoop: editorPreLoop.getValue(),
       loop: editorLoop.getValue()
     }
   },
   setCode: function( code ){
-    if( code == undefined ) return;
+    if( code == undefined ) return c.error('No code supplied !');
     $id('codeEditorTitleInput').value = code.title;//.replace(/[^a-zA-Z0-9]/g, '_');
     editorSetup.setValue( convertTabsToSpaces( code.setup ) );
     editorLoop.setValue( convertTabsToSpaces( code.loop ) );
+    editorPreLoop.setValue( convertTabsToSpaces( code.preLoop ) );
     getAndSendCode( );
+    return true;
   },
   sendCode: getAndSendCode,
 }

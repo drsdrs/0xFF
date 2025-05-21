@@ -23,22 +23,33 @@ img {
 
 .flex {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-direction: row;
 }
 
 #editorContainer{
-  width: 66%;
+  display: flex;
+  flex-direction: column;
+  max-width: 67%; 
+  flex-grow: 1;
 }
+
 #canvasRow{
-  width: 34%;
+  display: flex;
+  flex-direction: column;
+  width: 33%;
+  max-width: 512px;
 }
 
 @media (max-width: 700px) {
+  .flex { flex-wrap: wrap; }
   #editorContainer{
     width: 100%;
+    max-width: 100%;
   }
   #canvasRow{
     width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -83,13 +94,12 @@ canvas {
   image-rendering: pixelated;
   padding: 8px;
   width: 100%;
-  min-width: 256px;
-  max-width: 512px;
 }
 
 button:hover, .fakeButton:hover, .custom-select-box:hover, .custom-select-box.open,
 #collapseBtn:hover, .option:hover {
   background: #222;
+  background-color: #222;
 }
 
 .custom-select-box, .custom-select-box, .option, #volumeSlider, #audioPlayBtn {
@@ -160,6 +170,7 @@ button:hover, .fakeButton:hover, .custom-select-box:hover, .custom-select-box.op
 #errorOutputContainer.error h4::before{ content:'ERROR :(';}
 #errorOutputContainer.error { background: #A22;}
 
+
 #imageDataContainer > h4{
   display: inline-block;
   padding: 2px 8px;
@@ -181,7 +192,9 @@ button:hover, .fakeButton:hover, .custom-select-box:hover, .custom-select-box.op
 
 }
 .imgWrap{
-  width: 28%;
+  width: 20%;
+  max-width: 100px;
+  min-width: 50px;
   aspect-ratio: 1/1;   /* Modern browsers only; fallback is width/height */
   overflow: hidden;
   position: relative;
@@ -191,8 +204,8 @@ button:hover, .fakeButton:hover, .custom-select-box:hover, .custom-select-box.op
 
 .imgWrap h4{
   position: absolute;  /* Use absolute for overlay inside relative parent */
-  color: white;
-  background-color:#222;
+  color: #222;
+  background-color:0;
   font-size: 17px;
   padding: 2px;
   top: 1px;
@@ -211,7 +224,7 @@ button:hover, .fakeButton:hover, .custom-select-box:hover, .custom-select-box.op
 }
 
 .imgWrap button::before { content: 'X' }
-.imgWrap button{
+.imgWrap button {
   position: absolute;
   right: 1px;
   top: 1px;
@@ -219,11 +232,15 @@ button:hover, .fakeButton:hover, .custom-select-box:hover, .custom-select-box.op
   height: 22px;
   font-size: 17px;
   font-weight: bold;
-  accent-color: ;
-  background-color: #222;
+  color: #222;
+  background: 0;
   border: 0;
   outline: 0;
   cursor: pointer;
+}
+.imgWrap button:hover {
+  background: #222;
+  color: #ccc;
 }
 
 #colorSlider{
