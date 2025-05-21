@@ -19,7 +19,6 @@ function getActivePrgName(){
   let activePrgName = localStorage.getItem( 'activePrgName' );
   if( activePrgName ){ return activePrgName; }
   let prgList = getPrgList();
-  c.l("getactivePrgName", prgList)
   if( prgList[0] && prgList[0].length ){
     activePrgName = prgList[0];
     setActivePrgName( activePrgName );
@@ -54,7 +53,7 @@ function removePrg() {
 }
 
 function savePrg(prgName, codeObj) {
-  c.l("savePrg", prgName);
+  //c.l("savePrg", prgName, codeObj);
   let prgList = getPrgList();
   if ( prgList.includes( prgName )==false ) {
     addToPrgList( prgName );
@@ -95,7 +94,7 @@ async function loadAndSaveDemos() {
       if (parts.length < 2) {
         throw new Error(`Missing ###_PRE_LOOP_### marker in demo code for ${demoName}`);
       }
-      const preLoopCode = parts.pop(); // Get the setup code
+      const preLoopCode = parts.pop(); // Get the preLoop code
       
       parts = parts[0].split('###_SETUP_###');
       if (parts.length < 2) {

@@ -1,12 +1,10 @@
-const codeTitleEl = $id('codeEditorTitle');
 const codeContainerLoopEl = $id('codeEditorLoop');
 const codeContainerSetupEl = $id('codeEditorSetup');
-const codeEditorPreLoopEl = $id('codeEditorPreLoop');
+const codeContainerPreLoopEl = $id('codeEditorPreLoop');
 
 const codeCompiledEl = $id('codeCompiled');
 const codeCoffeeEl = $id('codeCoffee');
 const errorEl = $id('errorOutput');
-const errorH4El = errorEl.children[0];
 const errorOutputContainer = $id('errorOutputContainer');
 
 let keyKeys = {};
@@ -46,7 +44,7 @@ var editorLoop = CodeMirror.fromTextArea(
 );
 
 var editorPreLoop = CodeMirror.fromTextArea(
-  codeEditorPreLoopEl.getElementsByTagName('textarea')[0], codeMirrorOptions
+  codeContainerPreLoopEl.getElementsByTagName('textarea')[0], codeMirrorOptions
 );
 
 codeMirrorOptions.readOnly = true;
@@ -63,7 +61,7 @@ var compiledCodeEditor = CodeMirror.fromTextArea(
 
 async function getAndSendCode( ){
   let loop = editorLoop.getValue();
-  let preLoop = editorLoop.getValue();
+  let preLoop = editorPreLoop.getValue();
   let setup = editorSetup.getValue();
 
   let codeLines = loop.split('\n').filter(line => line.trim() !== '');
@@ -125,8 +123,12 @@ async function getAndSendCode( ){
   return compiledCode;
 }
 
+codeContainerPreLoopEl.onkeyup = keyUp;
+codeContainerPreLoopEl.onkeydown =  keyDown;
+
 codeContainerLoopEl.onkeyup = keyUp;
 codeContainerLoopEl.onkeydown =  keyDown;
+
 codeContainerSetupEl.onkeyup = keyUp;
 codeContainerSetupEl.onkeydown =  keyDown;
 
@@ -136,7 +138,6 @@ function keyUp(e){
 
 function keyDown(e){
   keyKeys[e.key] = true;
-  //codeContainerLoopEl.innerHTML = codeContainerLoopEl.innerText.replace(/==/g, '<span class="condition">==</span>');
 
   if(keyKeys["Control"] && keyKeys["s"]){
     e.preventDefault();

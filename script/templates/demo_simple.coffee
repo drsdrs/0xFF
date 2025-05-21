@@ -5,7 +5,7 @@ while i < pixels.length
   pixels[i] = t&t>>8
   i++
 ###_PRE_LOOP_###
-0
+'simple'
 ###_LOOP_###
 r += 1
 g = t^t>>8

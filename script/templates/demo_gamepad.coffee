@@ -5,7 +5,7 @@ while i < pixels.length
   pixels[i] = t&t>>8
   i++
 ###_PRE_LOOP_###
-0
+'gamepad'
 ###_LOOP_###
 r = g = b = t&t>>8
 if gp.btn[0] then g = img[0][i+1]

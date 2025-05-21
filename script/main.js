@@ -206,7 +206,7 @@ function fadeBodyIn(){
 let lastCompiledCode = '';
 const sendCodeCb = function( compiledCode ){
   lastCompiledCode = compiledCode;
-  // not here !!! Storage.save( Storage.getActivePrgName(), Editors.getCode() ) 
+  Storage.save( Storage.getActivePrgName(), Editors.getCode() ) 
   worker.postMessage( { functText: compiledCode } );
 }
 

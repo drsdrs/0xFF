@@ -7,7 +7,7 @@ while i < pixels.length
   i++
 
 ###_PRE_LOOP_###
-0
+'images'
 
 ###_LOOP_###
 r = img[4][i]&t>>8
