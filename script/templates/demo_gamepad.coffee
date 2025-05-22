@@ -1,3 +1,7 @@
+###_FPS_###
+4
+###_SCALE_###
+3
 ###_TITLE_###
 Example Gamepad
 ###_SETUP_###

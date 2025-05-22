@@ -31,32 +31,29 @@ imageCanvas.style.imageRendering = 'pixelated';
 imageCanvas.width = imageCanvas.height = 256;
 const imageCanvasCtx = imageCanvas.getContext("2d", { willReadFrequently: true });
 
-function getPixelDataFromImage(img) {
-  imageCanvasCtx.clearRect(0, 0, 256, 256);
-  imageCanvasCtx.imageSmoothingEnabled = false; // Disable smoothing for pixelated effect
-  // Calculate the new size while maintaining aspect ratio
+function getPixelDataFromImage(img, resolution = 256) {
+  imageCanvas.width = imageCanvas.height = resolution;
+  imageCanvasCtx.clearRect(0, 0, resolution, resolution);
+  imageCanvasCtx.imageSmoothingEnabled = false;
+
   const aspectRatio = img.width / img.height;
   let newWidth, newHeight;
   if (aspectRatio > 1) {
-    newWidth = 256;
-    newHeight = 256 / aspectRatio;
+    newWidth = resolution;
+    newHeight = resolution / aspectRatio;
   } else {
-    newWidth = 256 * aspectRatio;
-    newHeight = 256;
+    newWidth = resolution * aspectRatio;
+    newHeight = resolution;
   }
 
-  // Center the image on the canvas
-  const x = (256 - newWidth) / 2;
-  const y = (256 - newHeight) / 2;
+  const x = (resolution - newWidth) / 2;
+  const y = (resolution - newHeight) / 2;
 
-  // Draw the image on the canvas without interpolation
   imageCanvasCtx.drawImage(img, x, y, newWidth, newHeight);
 
-  // Get the pixel data
-  const imageData = imageCanvasCtx.getImageData(0, 0, 256, 256);
+  const imageData = imageCanvasCtx.getImageData(0, 0, resolution, resolution);
   const pixels = [];
 
-  // Extract RGB data from the pixel data
   for (let i = 0; i < imageData.data.length; i += 4) {
     pixels.push(imageData.data[i]);     // Red
     pixels.push(imageData.data[i + 1]); // Green
@@ -65,6 +62,7 @@ function getPixelDataFromImage(img) {
 
   return pixels;
 }
+
 
 // Init
 const imgPath = './img/';
@@ -125,9 +123,9 @@ async function refreshImgData() {
 }
 
 const Images = {
-  init: function( sendImgDataCbNew ){
+  init: function( sendImgDataCbNew, resolution ){
     sendImgDataCb = sendImgDataCbNew
-    init();
+    return init();
   },
 
 };

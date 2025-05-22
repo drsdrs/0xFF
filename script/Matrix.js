@@ -1,15 +1,17 @@
 let loopFunct = function( gp ){ return pixelData; }
 let gamepadData = { axis: [0,0,0,0,0,0], btn:[] }
 
-const INIT_SIZE = 1<<8;
+let resolution = 1<<8;
 // Create a buffer for the pixel data
-let pixelData = new Uint8Array(INIT_SIZE * INIT_SIZE * 3);
+let pixelData = new Uint8Array(resolution * resolution * 3);
 let imageData = []
 let canvas;
 
 let timeoutTime = 1000/60;
-let animate = undefined;
+let animate = function(){};
 let stopAnimate = false;
+
+let functText = '';
 
 let DEBUG_FPS = false;
 const FPS_60 = (1000/60);
@@ -44,9 +46,8 @@ function init(canvasNew){
     // Define the size of the pixel matrix
     const pixelSize = 1; // Each pixel is 1x1
 
-    canvas.width = INIT_SIZE;
-    canvas.height = INIT_SIZE;
-    let size2 = INIT_SIZE*INIT_SIZE;
+    canvas.width = resolution;
+    canvas.height = resolution;
 
 
     // Create a texture
@@ -127,9 +128,6 @@ function init(canvasNew){
     let dateOld = Date.now()
     let dateNow = Date.now()
 
-    let timeLoop = 0;
-    let timeRest = 0;
-
     // Animation loop
     animate = function() {
       if (stopAnimate) { console.log("STOPED ANIMATING"); return; }
@@ -140,19 +138,19 @@ function init(canvasNew){
       pixelData.set( loopFunct( delta, gamepadData ) );
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(
-          gl.TEXTURE_2D, 0, gl.RGB, INIT_SIZE, INIT_SIZE,
+          gl.TEXTURE_2D, 0, gl.RGB, resolution, resolution,
           0, gl.RGB, gl.UNSIGNED_BYTE, pixelData
       );
       gl.generateMipmap(gl.TEXTURE_2D);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-      if (timeoutTime < FPS_60) {
+      // if (timeoutTime < FPS_60) {
         latestTimeoutId = setTimeout( animate, timeoutTime);
-      } else {
-        latestTimeoutId = setTimeout( (function(){
-          requestAnimationFrame(animate);
-        }), timeoutTime);
-      }
+      // } else {
+      //   latestTimeoutId = setTimeout( (function(){
+      //     requestAnimationFrame(animate);
+      //   }), timeoutTime);
+      // }
 
     }
 }
@@ -168,13 +166,38 @@ let Matrix = {
   updateGamepad: function( gamepadDataNew ){
     gamepadData = gamepadDataNew;
   },
-  setFunct: function(functText){
-    const setupRes = new Function('img', functText)( imageData );
+  setFunctionText: function( functTextNew ){
+    functText = functTextNew;
+    const setupRes = new Function('img', 'res', functText)( imageData, resolution );
     loopFunct = setupRes[0];
     pixelData.set( setupRes[1] );
   },
   setImageData: function( imageDataNew ){
     imageData = imageDataNew;
+  },
+
+  setScale: function( scale ){
+    if( canvas == undefined ){ console.error("Matrix canvas not initialzed!\nMust run after init."); }
+    resolution = 1 << (8 - scale);
+    cancelAnimationFrame(latestTimeoutId);
+    clearTimeout(latestTimeoutId);
+    stopAnimate = true;
+
+    // Recreate pixelData buffer with new resolution
+    pixelData = new Uint8Array(resolution * resolution * 3);
+
+    canvas.width = resolution;
+    canvas.height = resolution;
+    // Update the WebGL viewport!
+    const gl = canvas.getContext('webgl');
+    gl.viewport(0, 0, resolution, resolution);
+    
+
+    Matrix.setFunctionText(functText);
+    console.log("setResTo: ", resolution);
+
+    stopAnimate = false;
+    animate();
   },
   setFps: function( fpsNew ){
     if( fpsNew < 0 ){

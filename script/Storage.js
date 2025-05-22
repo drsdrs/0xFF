@@ -1,153 +1,164 @@
 const storagePrefix = 'prg_';
+let c = console; // replace with your custom logger if needed
 
-
-function getPrgList(){
-  return JSON.parse( localStorage.getItem('prgList') );
+function getPrgList() {
+  const data = localStorage.getItem('prgList');
+  return data ? JSON.parse(data) : [];
 }
 
-function setPrgList( prgList ){
+function setPrgList(prgList) {
   localStorage.setItem('prgList', JSON.stringify(prgList));
 }
 
+function getActivePrgName() {
+  let name = localStorage.getItem('activePrgName');
+  if (name) return name;
 
-function setActivePrgName( newActivePrgName ){
-  c.l( 'setActivePrgName', newActivePrgName );
-  localStorage.setItem( 'activePrgName', newActivePrgName);
-}
-
-function getActivePrgName(){
-  let activePrgName = localStorage.getItem( 'activePrgName' );
-  if( activePrgName ){ return activePrgName; }
-  let prgList = getPrgList();
-  if( prgList[0] && prgList[0].length ){
-    activePrgName = prgList[0];
-    setActivePrgName( activePrgName );
-    return;
+  const prgList = getPrgList();
+  if (prgList.length > 0) {
+    name = prgList[0];
+    setActivePrgName(name);
+    return name;
   }
-  setActivePrgName( '' );
-  return '';
+
+  throw new Error("No active program name found and prgList is empty");
 }
 
-function addToPrgList(prgName) {
-  let prgList = getPrgList();
-  if (!prgList.includes(prgName)) {
-    prgList.push(prgName);
-    setPrgList( prgList);
+function setActivePrgName(name) {
+  c.log('setActivePrgName', name);
+  localStorage.setItem('activePrgName', name);
+}
+
+function addToPrgList(name) {
+  const prgList = getPrgList();
+  if (!prgList.includes(name)) {
+    prgList.push(name);
+    setPrgList(prgList);
   }
 }
 
-function removeFromPrgList(prgName) {
-  let prgList = getPrgList();
-  prgList = prgList.filter(name => name !== prgName);
-    setPrgList( prgList);
+function removeFromPrgList(name) {
+  const prgList = getPrgList().filter(n => n !== name);
+  setPrgList(prgList);
+}
+
+function savePrg(name, codeObj, fps, scale) {
+  c.log('savePrg', name);
+  if (!codeObj || typeof codeObj !== 'object') {
+    throw new Error('Invalid code object');
+  }
+
+  addToPrgList(name);
+  codeObj.fps = fps;
+  codeObj.scale = scale;
+  localStorage.setItem(storagePrefix + name, JSON.stringify(codeObj));
+}
+
+function loadPrg(name) {
+  const json = localStorage.getItem(storagePrefix + name);
+  if (!json) {
+    throw new Error(`No program found with name: ${name}`);
+  }
+  return JSON.parse(json);
 }
 
 function removePrg() {
-  let prgList = getPrgList();
-  removeFromPrgList( getActivePrgName() );
-  localStorage.removeItem( storagePrefix + getActivePrgName() );
-  if( prgList.length == 0 ){  // make empty one IF prglist.len is zero
-    Storage.save('New', { title: 'Empty', setup: '', preLoop: '', loop: '' });
+  const name = getActivePrgName();
+  removeFromPrgList(name);
+  localStorage.removeItem(storagePrefix + name);
+
+  const prgList = getPrgList();
+  if (prgList.length === 0) {
+    savePrg('New', { title: 'Empty', setup: '', preLoop: '', loop: ''}, 4, 1);
+    setActivePrgName('New');
+  } else {
+    setActivePrgName(prgList[0]);
   }
-  setActivePrgName( prgList[0] );
 }
 
-function savePrg(prgName, codeObj) {
-  //c.l("savePrg", prgName, codeObj);
-  let prgList = getPrgList();
-  if ( prgList.includes( prgName )==false ) {
-    addToPrgList( prgName );
-  }
+// -- DEMO LOADING --
 
-  localStorage.setItem(storagePrefix + prgName, JSON.stringify(codeObj));
+async function loadText(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch ${url}: ${res.status}`);
+  }
+  return res.text();
 }
 
-function loadPrg( prgName ) {
-  const prg = localStorage.getItem(storagePrefix + prgName);
-  if( prg == undefined ){ c.error("No prg found with name "+prgName); return 'No prg with name '+prgName+' '+prg }
-  return JSON.parse(
-    localStorage.getItem(storagePrefix + prgName)
-  );
-}
+async function parseAndSaveDemo(name, text) {
+  try {
+    const loopSplit = text.split('###_LOOP_###');
+    if (loopSplit.length < 2) throw 'Missing ###_LOOP_###';
+    const loop = loopSplit.pop();
 
-const loadText = async (url) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Response status: ${response.status}`);
+    const preSplit = loopSplit[0].split('###_PRE_LOOP_###');
+    if (preSplit.length < 2) throw 'Missing ###_PRE_LOOP_###';
+    const preLoop = preSplit.pop();
+
+    const setupSplit = preSplit[0].split('###_SETUP_###');
+    if (setupSplit.length < 2) throw 'Missing ###_SETUP_###';
+    const setup = setupSplit.pop();
+
+    const titleSplit = setupSplit[0].split('###_TITLE_###');
+    if (titleSplit.length < 2) throw 'Missing ###_TITLE_###';
+    const title = titleSplit.pop();
+
+    const scaleSplit = titleSplit[0].split('###_SCALE_###');
+    if (scaleSplit.length < 2) throw 'Missing ###_SCALE_###';
+    const scale = scaleSplit.pop().trim();
+
+    const fpsSplit = scaleSplit[0].split('###_FPS_###');
+    if (fpsSplit.length < 2) throw 'Missing ###_FPS_###';
+    const fps = fpsSplit.pop().trim();
+
+    savePrg(name, { title, setup, preLoop, loop}, fps, scale );
+  } catch (err) {
+    console.error(`Error parsing demo "${name}":`, err);
   }
-  return await response.text();
 }
 
 async function loadAndSaveDemos() {
   const demos = ['demo_gamepad', 'demo_simple', 'demo_images'];
 
-  const demoPromises = demos.map(async (demoName, i) => {
-    try {
-      const demoCode = await loadText(`./script/templates/${demoName}.coffee`);
-      let parts = demoCode.split('###_LOOP_###');
-      if (parts.length < 2) {
-        throw new Error(`Missing ###_LOOP_### marker in demo code for ${demoName}`);
+  await Promise.all(
+    demos.map(async (name) => {
+      try {
+        const code = await loadText(`./script/templates/${name}.coffee`);
+        await parseAndSaveDemo(name, code);
+      } catch (err) {
+        console.error(`Failed to load demo ${name}:`, err);
       }
-      const loopCode = parts.pop(); // Get the loop code
-      
-      parts = parts[0].split('###_PRE_LOOP_###');
-      if (parts.length < 2) {
-        throw new Error(`Missing ###_PRE_LOOP_### marker in demo code for ${demoName}`);
-      }
-      const preLoopCode = parts.pop(); // Get the preLoop code
-      
-      parts = parts[0].split('###_SETUP_###');
-      if (parts.length < 2) {
-        throw new Error(`Missing ###_SETUP_### marker in demo code for ${demoName}`);
-      }
-      const setupCode = parts.pop(); // Get the setup code
-
-      const descrParts = parts[0].split('###_TITLE_###');
-      if (descrParts.length < 2) {
-        throw new Error(`Missing ###_TITLE_### marker in demo code for ${demoName}`);
-      }
-      const descr = descrParts.pop(); // Get the description
-
-      // Save the demo
-      savePrg( demoName, {
-          title: descr, 
-          setup: setupCode, 
-          preLoop: preLoopCode, 
-          loop: loopCode
-        }
-      );
-
-      //c.l("Done loading demo", i, demoName, descr, setupCode);
-    } catch (error) {
-      console.error(`Error loading demo ${demoName}:`, error);
-    }
-  });
-
-  await Promise.all(demoPromises);
+    })
+  );
 }
 
-function initPrgList(){
-  if( getPrgList() == undefined ){
-    setPrgList( new Array() );
+function initPrgList() {
+  if (localStorage.getItem('prgList') == null) {
+    setPrgList([]);
   }
 }
 
+// -- MODULE EXPORT --
+
 const Storage = {
-  init: async function(cb) {
+  init: async function (cb) {
     initPrgList();
     await loadAndSaveDemos();
-    if( cb ){ cb(); }
+
+    if (typeof cb === 'function') cb();
+
+    return; // explicitly async
   },
-  remove: removePrg,
+
   save: savePrg,
-  list: function() { return getPrgList(); },
-  getActivePrgIndex: function() {
-    return getPrgList().indexOf( getActivePrgName() );
-  },
-  getActivePrgName: getActivePrgName,
-  setActivePrgName: setActivePrgName,
   load: loadPrg,
-  delete: removePrg
-}
+  remove: removePrg,
+  delete: removePrg, // alias
+  list: getPrgList,
+  getActivePrgName,
+  setActivePrgName,
+  getActivePrgIndex: () => getPrgList().indexOf(getActivePrgName()),
+};
 
 export default Storage;

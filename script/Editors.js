@@ -95,14 +95,15 @@ async function getAndSendCode( ){
   }
 
   compiledCodeEditor.setValue( compiledCode );
-  let codeRes = new Function('img', compiledCode);
+  let newFunction = new Function('img', 'res', compiledCode);
 
   let errMsg = 0;
   let res = '';
 
   try {
-    let func = codeRes;
-    res = func( [[],[],[],[],[],[]] )[0]( 0, {axis: [0,0,0,0,0,0], btn:[] } );
+    let func = newFunction;
+    // TODO need img,resolution, gpData is not so imortant i guess
+    res = func( [[],[],[],[],[],[]], 256 )[0]( 0, {axis:{x:0,y:0}, btn:[] } );
     errMsg = 0;
   } catch (e) {
     errMsg = e;
@@ -163,8 +164,7 @@ const Editors = {
     editorSetup.setValue( convertTabsToSpaces( code.setup ) );
     editorLoop.setValue( convertTabsToSpaces( code.loop ) );
     editorPreLoop.setValue( convertTabsToSpaces( code.preLoop ) );
-    getAndSendCode( );
-    return true;
+    return getAndSendCode( );
   },
   sendCode: getAndSendCode,
 }

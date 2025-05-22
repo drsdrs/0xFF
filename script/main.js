@@ -16,11 +16,13 @@ import Synth from './Synth.js'
 import CssColor from './CssColor.js'
 import Rnd from './Rnd.js'
 
-const headerEl = $id('header');
-const btnContainer = $id('btnContainer')
+let fps = -99;
+let scale = -99;
+let selectedFpsOption = 3;
+let selectedScaleOption = 0;
+
 
 let bodyOpacity = 0;
-const selectedFpsIndex = 3;
 
 const offscreenCanvas = $id('webglCanvas').transferControlToOffscreen();
 
@@ -36,20 +38,26 @@ $id('colorSlider').addEventListener( 'change', function(e){
 });
 
 /*----  FPS selectBox  ----*/
+
 const fpsValues = [
   { value: 0,  content: 'Endless' },
   { value: 180 },
   { value: 120 },
   { value: 60 },
   { value: 30 },
-  { value: 10 },
+  { value: 15 },
+  { value: 8 },
+  { value: 4 },
+  { value: 2 },
   { value: 1 },
   { value: -1,  content: 'Stop'},
 ];
+
+
 const selectFpsCb = function( fpsNew ){
-  worker.postMessage({ setFps: fpsNew });
+  fps = fpsNew;
+  worker.postMessage({ action: 'setFps', value:  fpsNew });
 }
-SelectBox.add( 'FPS', $id('fpsBtnContainer'), fpsValues, selectedFpsIndex, selectFpsCb);
 
 /*      Later...   */
 const scaleValues = [
@@ -60,6 +68,10 @@ const scaleValues = [
   { value: 4,  content: '16x16' },
   { value: 5,  content: '8x8' }
 ];
+const selectScaleCb = function( scaleNew ){
+  scale = scaleNew;
+  worker.postMessage({ action: 'setScale', value:  scale });
+}
 
 /*     FILE OPERATIONS    */
 const fileOperationValues = [
@@ -82,7 +94,7 @@ async function savePrgCb( newPrgName ){
   if( compilationResult ){ //  compilation Success
     let activePrgName = Storage.getActivePrgName();
     InfoTicker.addNonPermaText( 'File "'+activePrgName+'" saved.' );
-    Storage.save( activePrgName, Editors.getCode(), 'SetAsActive' );
+    Storage.save( activePrgName, Editors.getCode(), fps, scale );
   } else {  // compilation Failed
     InfoTicker.addNonPermaText( 'Not Saved! Errors...' );
   }
@@ -184,7 +196,7 @@ function fetchGamepad(){
       }
     }
   }
-  worker.postMessage( { gamepadData: gamepadData } );
+  worker.postMessage( { action: 'setGamepadData', value:  gamepadData } );
   requestAnimationFrame( fetchGamepad );
   //  TODO editor should get gamepad data, imgData also, 
   // to try code better
@@ -204,14 +216,15 @@ function fadeBodyIn(){
 }
 
 let lastCompiledCode = '';
+
 const sendCodeCb = function( compiledCode ){
   lastCompiledCode = compiledCode;
-  Storage.save( Storage.getActivePrgName(), Editors.getCode() ) 
-  worker.postMessage( { functText: compiledCode } );
+  worker.postMessage( { action: 'setFunctionText', value: compiledCode } );
+  Storage.save( Storage.getActivePrgName(), Editors.getCode(), fps, scale ) 
 }
 
 function sendImageDataCb( imageData ){
-  worker.postMessage( { imageData: imageData } );
+  worker.postMessage( { action: 'setImageData', value: imageData } );
 }
 
 /*----      MAIN - INIT       ----*/
@@ -219,19 +232,36 @@ const loadetTheme = localStorage.getItem('theme');
 $id('colorSlider').value = loadetTheme|0;
 CssColor.init( loadetTheme, Rnd );
 
+await Images.init( sendImageDataCb ); // removed await !?!?
 await Storage.init();
 Editors.init( sendCodeCb );
 Overlay.init();
 SelectBox.init();
-await Images.init( sendImageDataCb ); // removed await !?!?
 
 let activePrg = Storage.load( Storage.getActivePrgName() );
-Editors.setCode( activePrg );
+c.l("activePrg", activePrg)
+lastCompiledCode = await Editors.setCode( activePrg );
 
 makeFileSelectBox();
 
-fadeBodyIn();
+selectedFpsOption = activePrg.fps || selectedFpsOption;
+selectedScaleOption = activePrg.scale || selectedScaleOption;
 
-worker.postMessage( { setFps: fpsValues[selectedFpsIndex].value } );
-worker.postMessage( { canvas: offscreenCanvas }, [offscreenCanvas] );
-  
+fps = fpsValues[ selectedFpsOption ].value;
+scale = scaleValues[ selectedScaleOption ].value;
+
+SelectBox.add(
+  'FPS', $id('fpsBtnContainer'), fpsValues, selectedFpsOption, selectFpsCb
+);
+
+SelectBox.add(
+  'Scale', $id('scaleBtnContainer'), scaleValues, selectedScaleOption, selectScaleCb
+);
+
+
+worker.postMessage( { action: 'setFps', value: fps } );
+worker.postMessage( { action: 'setFunctionText', value: lastCompiledCode } );
+worker.postMessage( { action: 'init', value: offscreenCanvas }, [offscreenCanvas] );
+worker.postMessage( { action: 'setScale', value: scale } );
+
+fadeBodyIn();
