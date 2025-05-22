@@ -1,7 +1,7 @@
 ###_FPS_###
-2
+3
 ###_SCALE_###
-5
+0
 ###_TITLE_###
 Simple demo
 ###_SETUP_###

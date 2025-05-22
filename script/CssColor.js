@@ -93,30 +93,33 @@ function adjustColor(color, factor) {
 function generatePalette(numHues) {
     let cssOutput = '';
     let startHue = Rnd.next()*Rnd.next()*100;
-    let hueInc = Rnd.next()*Rnd.next()*2;//(1/(numHues/2))+(Rnd.next()/(numHues/2));
+    let hueInc = Rnd.next()*Rnd.next()*3;//(1/(numHues/2))+(Rnd.next()/(numHues/2));
+    let valInc = 0;
     let val = 0.2 + Rnd.next()*Rnd.next()/18;
     let sat = val;
 
-    if( Rnd.next()<.1 ){ hueInc = 0;}
-    else if( Rnd.next()>.9 ){ hueInc = 1/numHues; }
+    if( Rnd.next()<.075 ){ hueInc = 0;}
+    else if( Rnd.next()>.95 ){ hueInc = 1/numHues; }
 
-    if( Rnd.next()>.9 ){
+    if( Rnd.next()<.075 ){
       sat = 0; 
-      val = Rnd.next()/3;
+      val = Rnd.next();
+      valInc = Rnd.next();
     } else if( Rnd.next()>.5 ){
       sat = 1-val
     }
-    c.l(Rnd.next())
 
     for (let i = 0; i < numHues; i+=1) {
-      startHue += hueInc;
-
+      val %= .5;
       const baseColor = rgbToHtmlColor( hslToRgb( startHue%1, sat, val ) ); // Use seed + i for different colors
       const lightColor = adjustColor(baseColor, 1.25);
       const normalColor = baseColor;
       const darkColor = adjustColor(baseColor, 0.75);
-
+      
       cssOutput += `.color${i} { background-color: ${normalColor}; }\n`;
+      
+      startHue += hueInc;
+      val += valInc;
 
     }
     

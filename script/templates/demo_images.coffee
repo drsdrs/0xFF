@@ -1,7 +1,7 @@
 ###_FPS_###
-5
+3
 ###_SCALE_###
-2
+0
 ###_TITLE_###
 Use images in the imageslider for drawing onto the canvas
 

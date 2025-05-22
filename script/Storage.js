@@ -42,20 +42,32 @@ function removeFromPrgList(name) {
   setPrgList(prgList);
 }
 
-function savePrg(name, codeObj, fps, scale) {
-  c.log('savePrg', name);
+function savePrg(name, codeObj, fpsIndex, scaleIndex) {
+  if (typeof name !== 'string' || !name.trim()) {
+    console.warn('[Storage.savePrg] Invalid program name:', name);
+    throw new Error('Invalid program name');
+  }
+
   if (!codeObj || typeof codeObj !== 'object') {
+    console.warn('[Storage.savePrg] Invalid code object:', codeObj);
     throw new Error('Invalid code object');
   }
 
+  // Add metadata
+  codeObj.fps = parseInt(fpsIndex);
+  codeObj.scale = parseInt(scaleIndex);
+
+  // Ensure it's listed and saved
   addToPrgList(name);
-  codeObj.fps = fps;
-  codeObj.scale = scale;
   localStorage.setItem(storagePrefix + name, JSON.stringify(codeObj));
+
+  c.log(`[Storage.savePrg] Saved "${name}" with FPS index ${fpsIndex}, Scale index ${scaleIndex}`);
 }
+
 
 function loadPrg(name) {
   const json = localStorage.getItem(storagePrefix + name);
+  //c.l("loading "+name+', res:',json)
   if (!json) {
     throw new Error(`No program found with name: ${name}`);
   }

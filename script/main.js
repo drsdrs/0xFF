@@ -16,8 +16,7 @@ import Synth from './Synth.js'
 import CssColor from './CssColor.js'
 import Rnd from './Rnd.js'
 
-let fps = -99;
-let scale = -99;
+
 let selectedFpsOption = 3;
 let selectedScaleOption = 0;
 
@@ -53,10 +52,14 @@ const fpsValues = [
   { value: -1,  content: 'Stop'},
 ];
 
+function saveSelectedPrg(){
+  Storage.save( Storage.getActivePrgName(), Editors.getCode(), selectedFpsOption, selectedScaleOption );
+} 
 
-const selectFpsCb = function( fpsNew ){
-  fps = fpsNew;
-  worker.postMessage({ action: 'setFps', value:  fpsNew });
+const selectFpsCb = function( fps ){
+  selectedFpsOption = fpsValues.findIndex(obj => obj.value === parseInt(fps) );
+  saveSelectedPrg(); 
+  worker.postMessage({ action: 'setFps', value:  fps });
 }
 
 /*      Later...   */
@@ -68,9 +71,12 @@ const scaleValues = [
   { value: 4,  content: '16x16' },
   { value: 5,  content: '8x8' }
 ];
-const selectScaleCb = function( scaleNew ){
-  scale = scaleNew;
-  worker.postMessage({ action: 'setScale', value:  scale });
+const selectScaleCb = function( selectedScaleOptionNew ){
+  c.l( 'selectedScaleOptionNew', selectedScaleOptionNew);
+  selectedScaleOption = selectedScaleOptionNew;
+  Images.refreshImgData( selectedScaleOption );
+  worker.postMessage({ action: 'setScale', value:  selectedScaleOption });
+  saveSelectedPrg();
 }
 
 /*     FILE OPERATIONS    */
@@ -94,7 +100,7 @@ async function savePrgCb( newPrgName ){
   if( compilationResult ){ //  compilation Success
     let activePrgName = Storage.getActivePrgName();
     InfoTicker.addNonPermaText( 'File "'+activePrgName+'" saved.' );
-    Storage.save( activePrgName, Editors.getCode(), fps, scale );
+    Storage.save( activePrgName, Editors.getCode(), selectedFpsOption, selectedScaleOption );
   } else {  // compilation Failed
     InfoTicker.addNonPermaText( 'Not Saved! Errors...' );
   }
@@ -120,10 +126,21 @@ SelectBox.add(
 /*----  Program file select  ----*/
 function loadPrgCb( prgName ){
   c.l('loadPrgCb', prgName)
-  //Storage.save( Storage.getActivePrgName(), Editors.getCode(), 'SetAsActive' );
   const prg = Storage.load( prgName );
   Editors.setCode( prg );
   Storage.setActivePrgName( prgName );
+  selectedFpsOption = prg.fps;
+  selectedScaleOption = prg.scale;
+
+  SelectBox.add(
+    'FPS', $id('fpsBtnContainer'), fpsValues, selectedFpsOption, selectFpsCb
+  );
+
+  SelectBox.add(
+    'Scale', $id('scaleBtnContainer'), scaleValues, selectedScaleOption, selectScaleCb
+  );
+
+
   InfoTicker.addNonPermaText('Program "'+prgName+'" loaded.');
 }
 
@@ -220,7 +237,7 @@ let lastCompiledCode = '';
 const sendCodeCb = function( compiledCode ){
   lastCompiledCode = compiledCode;
   worker.postMessage( { action: 'setFunctionText', value: compiledCode } );
-  Storage.save( Storage.getActivePrgName(), Editors.getCode(), fps, scale ) 
+  saveSelectedPrg();
 }
 
 function sendImageDataCb( imageData ){
@@ -240,15 +257,14 @@ SelectBox.init();
 
 let activePrg = Storage.load( Storage.getActivePrgName() );
 c.l("activePrg", activePrg)
-lastCompiledCode = await Editors.setCode( activePrg );
 
 makeFileSelectBox();
 
-selectedFpsOption = activePrg.fps || selectedFpsOption;
-selectedScaleOption = activePrg.scale || selectedScaleOption;
+selectedFpsOption = activePrg.fps;
+selectedScaleOption = activePrg.scale;
 
-fps = fpsValues[ selectedFpsOption ].value;
-scale = scaleValues[ selectedScaleOption ].value;
+let fps = fpsValues[ selectedFpsOption ].value;
+let scale = scaleValues[ selectedScaleOption ].value;
 
 SelectBox.add(
   'FPS', $id('fpsBtnContainer'), fpsValues, selectedFpsOption, selectFpsCb
@@ -260,8 +276,10 @@ SelectBox.add(
 
 
 worker.postMessage( { action: 'setFps', value: fps } );
-worker.postMessage( { action: 'setFunctionText', value: lastCompiledCode } );
+//worker.postMessage( { action: 'setFunctionText', value: lastCompiledCode } );
+lastCompiledCode = await Editors.setCode( activePrg );
 worker.postMessage( { action: 'init', value: offscreenCanvas }, [offscreenCanvas] );
 worker.postMessage( { action: 'setScale', value: scale } );
+
 
 fadeBodyIn();

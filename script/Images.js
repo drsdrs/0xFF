@@ -24,13 +24,13 @@ function loadImage() {
   reader.readAsDataURL(file);
 };
 
-/*----  Extract image data  ----*/
 let imgData = [];
 const imageCanvas = document.createElement('canvas');
 imageCanvas.style.imageRendering = 'pixelated';
 imageCanvas.width = imageCanvas.height = 256;
 const imageCanvasCtx = imageCanvas.getContext("2d", { willReadFrequently: true });
 
+/*----  Extract image data  ----*/
 function getPixelDataFromImage(img, resolution = 256) {
   imageCanvas.width = imageCanvas.height = resolution;
   imageCanvasCtx.clearRect(0, 0, resolution, resolution);
@@ -113,21 +113,23 @@ async function init() {
   sendImgDataCb( imgData );
 }
 
-async function refreshImgData() {
+async function refreshImgData( scale = 0 ) {
+  const resolution = 1<<(8-scale);
   const imgEls = imageViewEl.getElementsByTagName('img');
   for (let i = 0; i < imgEls.length; i++) {
     const el = imgEls[i];
-    imgData[i] = getPixelDataFromImage(el);
+    imgData[i] = getPixelDataFromImage(el, resolution);
   }
   sendImgDataCb( imgData );
 }
+
 
 const Images = {
   init: function( sendImgDataCbNew, resolution ){
     sendImgDataCb = sendImgDataCbNew
     return init();
   },
-
+  refreshImgData: refreshImgData
 };
 
 export default Images;
